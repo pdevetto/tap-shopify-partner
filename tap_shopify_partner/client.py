@@ -20,6 +20,7 @@ class ShopifyPartnerStream(GraphQLStream):
     restore_rate = None
     max_points = None
     single_object_params = None
+    replication_key_filter = None
 
     @property
     def url_base(self) -> str:
@@ -51,12 +52,9 @@ class ShopifyPartnerStream(GraphQLStream):
             else:
                 pages = 250 if pages > 250 else pages
         return int(pages)
-
-    #TODO, write automatic query builder
-    @cached_property
-    def query(self) -> str:
-        """Set or return the GraphQL query string."""
-        base_query = """
+    @property
+    def base_query(self)-> str:
+        return """
             query tapShopify($first: Int, $after: String) {
                 __query_name__(first: $first, after: $after) {
                     edges {
@@ -72,11 +70,19 @@ class ShopifyPartnerStream(GraphQLStream):
             }
         """
 
+    #TODO, write automatic query builder
+    @cached_property
+    def query(self) -> str:
+        """Set or return the GraphQL query string."""
+        base_query = self.base_query
+
         query = base_query.replace("__query_name__", self.query_name)
         query = query.replace("__selected_fields__", self.gql_selected_fields)
 
         return query
-
+    @property
+    def json_path(self):
+        return "$.data"
     def get_next_page_token(
         self, response: requests.Response, previous_token: Optional[Any]
     ) -> Any:
@@ -84,10 +90,10 @@ class ShopifyPartnerStream(GraphQLStream):
         if not self.replication_key:
             return None
         response_json = response.json()
-        has_next_json_path = f"$.data.{self.query_name}.pageInfo.hasNextPage"
+        has_next_json_path = f"{self.json_path}.{self.query_name}.pageInfo.hasNextPage"
         has_next = next(extract_jsonpath(has_next_json_path, response_json))
         if has_next:
-            cursor_json_path = f"$.data.{self.query_name}.edges[-1].cursor"
+            cursor_json_path = f"{self.json_path}.{self.query_name}.edges[-1].cursor"
             all_matches = extract_jsonpath(cursor_json_path, response_json)
             return next(all_matches, None)
         return None
@@ -105,17 +111,21 @@ class ShopifyPartnerStream(GraphQLStream):
             if start_date:
                 date = start_date.strftime("%Y-%m-%dT%H:%M:%S")
                 params["filter"] = f"updated_at:>{date}"
+                if self.replication_key_filter:
+                    params[self.replication_key_filter] = date
         if self.single_object_params:
             params = self.single_object_params
+        if self.name == "events":
+            params['id'] = f"gid://partners/App/{self.config.get('app_id')}"
         return params
 
     def parse_response(self, response: requests.Response) -> Iterable[dict]:
         """Parse the response and return an iterator of result rows."""
         self.logger.info(f"Parsing response for stream {self.name}")
         if self.replication_key:
-            json_path = f"$.data.{self.query_name}.edges[*].node"
+            json_path = f"{self.json_path}.{self.query_name}.edges[*].node"
         else:
-            json_path = f"$.data.{self.query_name}"
+            json_path = f"{self.json_path}.{self.query_name}"
         response = response.json()
         if "extensions" in response:
             cost = response["extensions"].get("cost")

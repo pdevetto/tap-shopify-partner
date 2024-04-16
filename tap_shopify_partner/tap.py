@@ -8,11 +8,13 @@ from singer_sdk import typing as th  # JSON schema typing helpers
 from tap_shopify_partner.streams import (
     ShopifyPartnerStream,
     TransactionsStream,
+    EventsStream,
     
 )
 
 STREAM_TYPES = [
     TransactionsStream,
+    EventsStream,
 ]
 
 
