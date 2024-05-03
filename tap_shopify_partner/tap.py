@@ -30,7 +30,12 @@ class TapShopifyPartner(Tap):
         ),
         th.Property(
             "partner_id",
-            th.IntegerType,
+            th.StringType,
+            required=True,
+        ),
+        th.Property(
+            "app_id",
+            th.StringType,
             required=True,
         ),
         th.Property(

@@ -13,7 +13,14 @@ pipx install tap-shopify-partner
 
 ### Accepted Config Options
 
-- [ ] `Developer TODO:` Provide a list of config options accepted by the tap.
+```bash
+{
+  "api_key": "prtapi_1234567878", # API-Key / Access Token Required
+  "partner_id": "123455",  # Partner ID Required
+  "app_id": "1231232", # App ID for fetching events, Required
+  "start_date": null # Optional
+}
+```
 
 A full list of supported settings and capabilities for this
 tap is available by running:

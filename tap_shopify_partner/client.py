@@ -126,6 +126,8 @@ class ShopifyPartnerStream(GraphQLStream):
             json_path = f"{self.json_path}.{self.query_name}.edges[*].node"
         else:
             json_path = f"{self.json_path}.{self.query_name}"
+        if self.name == "transactions":
+            json_path  = f"{self.json_path}.{self.query_name}.edges[*]"  
         response = response.json()
         if "extensions" in response:
             cost = response["extensions"].get("cost")
