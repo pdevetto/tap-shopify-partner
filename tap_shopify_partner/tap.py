@@ -47,6 +47,9 @@ class TapShopifyPartner(Tap):
 
     def discover_streams(self) -> List[Stream]:
         """Return a list of discovered streams."""
-        return [stream_class(tap=self) for stream_class in STREAM_TYPES]
+        return [
+            stream_class(tap=self) for stream_class in STREAM_TYPES
+        ]
+
 if __name__ == '__main__':
-    TapShopifyPartner.cli()    
+    TapShopifyPartner.cli()

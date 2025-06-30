@@ -52,6 +52,7 @@ class ShopifyPartnerStream(GraphQLStream):
             else:
                 pages = 250 if pages > 250 else pages
         return int(pages)
+    
     @property
     def base_query(self)-> str:
         return """
@@ -80,9 +81,11 @@ class ShopifyPartnerStream(GraphQLStream):
         query = query.replace("__selected_fields__", self.gql_selected_fields)
 
         return query
+
     @property
     def json_path(self):
         return "$.data"
+
     def get_next_page_token(
         self, response: requests.Response, previous_token: Optional[Any]
     ) -> Any:
@@ -115,7 +118,7 @@ class ShopifyPartnerStream(GraphQLStream):
                     params[self.replication_key_filter] = date
         if self.single_object_params:
             params = self.single_object_params
-        if self.name == "events":
+        if self.name in ["events", "transactions"]:
             params['id'] = f"gid://partners/App/{self.config.get('app_id')}"
         return params
 
@@ -126,9 +129,13 @@ class ShopifyPartnerStream(GraphQLStream):
             json_path = f"{self.json_path}.{self.query_name}.edges[*].node"
         else:
             json_path = f"{self.json_path}.{self.query_name}"
-        if self.name == "transactions":
-            json_path  = f"{self.json_path}.{self.query_name}.edges[*]"  
         response = response.json()
+        if "errors" in response:
+            self.logger.error(f"Query error : {response}")
+            messages = [
+                error.get("message", "no error message") for error in response["errors"]
+            ]
+            raise RuntimeError(f"Query error: { messages }")
         if "extensions" in response:
             cost = response["extensions"].get("cost")
             if not self.query_cost:
@@ -137,7 +144,14 @@ class ShopifyPartnerStream(GraphQLStream):
             self.restore_rate = cost["throttleStatus"].get("restoreRate")
             self.max_points = cost["throttleStatus"].get("maximumAvailable")
 
-        yield from extract_jsonpath(json_path, input=response)
+        try:
+            matches = extract_jsonpath(json_path, input=response)
+            for match in matches:
+                # self.logger.info(f"Yielding record: {match}")
+                yield match
+        except Exception as e:
+            self.logger.error(f"Failed to extract or yield records: {e}", exc_info=True)
+            raise
 
     @cached_property
     def selected_properties(self):
