@@ -6,7 +6,7 @@ class TransactionsStream(ShopifyPartnerStream):
     """Define custom stream."""
     name = "transactions"
     query_name = "transactions"
-    replication_key = "id"
+    replication_key = "createdAt"
     primary_keys = ["id"]
     
     schema = th.PropertiesList(
