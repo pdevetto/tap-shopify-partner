@@ -11,6 +11,7 @@ class TransactionsStream(ShopifyPartnerStream):
     
     schema = th.PropertiesList(
         th.Property("id", th.StringType),
+        th.Property("chargeId", th.StringType),
         th.Property("createdAt", th.DateTimeType),
         th.Property("__typename", th.StringType),
         th.Property("grossAmount",th.ObjectType(
@@ -21,6 +22,15 @@ class TransactionsStream(ShopifyPartnerStream):
             th.Property("amount",th.StringType),
             th.Property("currencyCode",th.StringType),
         )),
+        th.Property("amount",th.ObjectType(
+            th.Property("amount",th.StringType),
+            th.Property("currencyCode",th.StringType),
+        )),
+        th.Property("shopId", th.StringType),
+        th.Property("shopMyshopifyDomain",th.StringType),
+        th.Property("shopName",th.StringType),
+        th.Property("shopAvatarUrl",th.StringType),
+        th.Property("referalCategory", th.StringType),
     ).to_dict()
 
     @property
@@ -29,33 +39,84 @@ class TransactionsStream(ShopifyPartnerStream):
     
     @property
     def base_query(self)-> str:
-        return """
-            query tapShopify($first: Int, $after: String, $id: ID!) {
-                transactions(first: $first, after: $after, appId: $id) {
-                    edges {
+        # Add sub query for getting transaction details for sales (has net- and gross- amount)
+        sale_objects = [
+            "AppOneTimeSale", 
+            "AppSaleAdjustment",
+            "AppSaleCredit",
+            "AppSubscriptionSale",
+            "AppUsageSale",
+            "ServiceSale",
+            "ServiceSaleAdjustment",
+            "ThemeSale",
+            "ThemeSaleAdjustment"
+        ]
+        sales_nodes = [
+            f"""
+                ... on {object_name} {{
+                    { "chargeId" if object_name in ["AppOneTimeSale", "AppSaleAdjustment", "AppSaleCredit", "AppSubscriptionSale"] else "" }
+                    grossAmount {{
+                        amount
+                        currencyCode
+                    }}
+                    netAmount {{
+                        amount
+                        currencyCode
+                    }}
+                    shop {{
+                        shopId: id
+                        shopMyshopifyDomain: myshopifyDomain
+                        shopName: name
+                        shopAvatarUrl: avatarUrl
+                    }}
+                }}
+            """ for object_name in sale_objects
+        ].join("\n")
+
+        # Add sub query for getting transaction details for legacy transaction (only amount)
+        transaction_objects = [
+            "LegacyTransaction",
+            "ReferralAdjustment",
+            "ReferralTransaction",
+            "TaxTransaction",
+        ]
+        transactions_nodes = [
+            f"""
+                amount {{
+                    amount
+                    currencyCode
+                }}
+                { "referalCategory: category" if object_name in ["ReferralAdjustment", "ReferralTransaction"] else ""}
+                shop {{
+                    shopId: id
+                    shopMyshopifyDomain: myshopifyDomain
+                    shopName: name
+                    shopAvatarUrl: avatarUrl
+                }}
+            """ for object_name in transaction_objects
+        ].join("\n")
+
+        query = f"""
+            query tapShopify($first: Int, $after: String, $id: ID!) {{
+                transactions(first: $first, after: $after, appId: $id) {{
+                    edges {{
                         cursor
-                        node {
+                        node {{
                             id
                             createdAt
                             __typename
-                            ... on AppSubscriptionSale {
-                                grossAmount {
-                                    amount
-                                    currencyCode
-                                }
-                                netAmount {
-                                    amount
-                                    currencyCode
-                                }
-                            }
-                        }
-                    },
-                    pageInfo {
+                            { sales_nodes }
+                            { transactions_nodes }
+                        }}
+                    }},
+                    pageInfo {{
                         hasNextPage
-                    }
-                }
-            }
+                    }}
+                }}
+            }}
         """
+        self.logger.info(f"TransactionsStream.base_query = {query}")
+        return query
 
 class EventsStream(ShopifyPartnerStream):
     """Define custom stream."""
