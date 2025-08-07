@@ -51,7 +51,7 @@ class TransactionsStream(ShopifyPartnerStream):
             "ThemeSale",
             "ThemeSaleAdjustment"
         ]
-        sales_nodes = [
+        sales_nodes = " ".join([
             f"""
                 ... on {object_name} {{
                     { "chargeId" if object_name in ["AppOneTimeSale", "AppSaleAdjustment", "AppSaleCredit", "AppSubscriptionSale"] else "" }
@@ -71,30 +71,32 @@ class TransactionsStream(ShopifyPartnerStream):
                     }}
                 }}
             """ for object_name in sale_objects
-        ]
+        ])
 
         # Add sub query for getting transaction details for legacy transaction (only amount)
         transaction_objects = [
             "LegacyTransaction",
             "ReferralAdjustment",
             "ReferralTransaction",
-            "TaxTransaction",
+            #"TaxTransaction",
         ]
-        transactions_nodes = [
+        transactions_nodes = " ".join([
             f"""
-                amount {{
-                    amount
-                    currencyCode
-                }}
-                { "referalCategory: category" if object_name in ["ReferralAdjustment", "ReferralTransaction"] else ""}
-                shop {{
-                    shopId: id
-                    shopMyshopifyDomain: myshopifyDomain
-                    shopName: name
-                    shopAvatarUrl: avatarUrl
+                ... on {object_name} {{
+                    amount {{
+                        amount
+                        currencyCode
+                    }}
+                    { "referalCategory: category" if object_name in ["ReferralAdjustment", "ReferralTransaction"] else ""}
+                    shop {{
+                        shopId: id
+                        shopMyshopifyDomain: myshopifyDomain
+                        shopName: name
+                        shopAvatarUrl: avatarUrl
+                    }}
                 }}
             """ for object_name in transaction_objects
-        ]
+        ])
 
         query = f"""
             query tapShopify($first: Int, $after: String, $id: ID!) {{
