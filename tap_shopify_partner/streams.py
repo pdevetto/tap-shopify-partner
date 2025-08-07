@@ -71,7 +71,7 @@ class TransactionsStream(ShopifyPartnerStream):
                     }}
                 }}
             """ for object_name in sale_objects
-        ].join("\n")
+        ]
 
         # Add sub query for getting transaction details for legacy transaction (only amount)
         transaction_objects = [
@@ -94,7 +94,7 @@ class TransactionsStream(ShopifyPartnerStream):
                     shopAvatarUrl: avatarUrl
                 }}
             """ for object_name in transaction_objects
-        ].join("\n")
+        ]
 
         query = f"""
             query tapShopify($first: Int, $after: String, $id: ID!) {{
@@ -105,8 +105,8 @@ class TransactionsStream(ShopifyPartnerStream):
                             id
                             createdAt
                             __typename
-                            { sales_nodes }
-                            { transactions_nodes }
+                            { "\n".join(sales_nodes) }
+                            { "\n".join(transactions_nodes) }
                         }}
                     }},
                     pageInfo {{
