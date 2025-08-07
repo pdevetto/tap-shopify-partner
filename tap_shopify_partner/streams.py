@@ -107,8 +107,8 @@ class TransactionsStream(ShopifyPartnerStream):
                             id
                             createdAt
                             __typename
-                            { sales_nodes }
-                            { transactions_nodes }
+                            { "\n".join(sales_nodes) }
+                            { "\n".join(transactions_nodes) }
                         }}
                     }},
                     pageInfo {{
