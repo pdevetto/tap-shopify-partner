@@ -33,6 +33,15 @@ class TransactionsStream(ShopifyPartnerStream):
         th.Property("referalCategory", th.StringType),
     ).to_dict()
 
+    def post_process(self, row: dict, context: dict = None) -> dict:
+        shop = row.get("shop", {})
+        if shop:
+            for key in ["shopId", "shopName", "shopMyshopifyDomain", "shopAvatarUrl"]:
+                if key not in row and key in shop:
+                    row[key] = shop[key]
+            row.pop("shop", None)
+        return row
+
     @property
     def json_path(self):
         return f"$.data"
@@ -107,8 +116,8 @@ class TransactionsStream(ShopifyPartnerStream):
                             id
                             createdAt
                             __typename
-                            { "\n".join(sales_nodes) }
-                            { "\n".join(transactions_nodes) }
+                            { sales_nodes }
+                            { transactions_nodes }
                         }}
                     }},
                     pageInfo {{

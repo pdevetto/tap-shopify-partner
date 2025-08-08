@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "tap-shopify-partner"
-version = "0.2.3"
+version = "0.2.5"
 description = "`tap-shopify-partner` is a Singer tap for ShopifyPartner, built with the Meltano SDK for Singer Taps."
 authors = ["Adil Ahmed", "Pierre De Vettor"]
 keywords = [
