@@ -26,7 +26,7 @@ class TransactionsStream(ShopifyPartnerStream):
             th.Property("amount",th.StringType),
             th.Property("currencyCode",th.StringType),
         )),
-        th.Property("shopId", th.StringType),
+        th.Property("shopId", th.StringType), 
         th.Property("shopMyshopifyDomain",th.StringType),
         th.Property("shopName",th.StringType),
         th.Property("shopAvatarUrl",th.StringType),
@@ -78,7 +78,7 @@ class TransactionsStream(ShopifyPartnerStream):
             "LegacyTransaction",
             "ReferralAdjustment",
             "ReferralTransaction",
-            #"TaxTransaction",
+            # "TaxTransaction", # "Field 'shop' doesn't exist on type 'TaxTransaction'"
         ]
         transactions_nodes = " ".join([
             f"""
