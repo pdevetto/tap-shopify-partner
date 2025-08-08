@@ -11,26 +11,26 @@ class TransactionsStream(ShopifyPartnerStream):
     
     schema = th.PropertiesList(
         th.Property("id", th.StringType),
-        th.Property("chargeId", th.StringType),
+        #th.Property("chargeId", th.StringType),
         th.Property("createdAt", th.DateTimeType),
         th.Property("__typename", th.StringType),
-        th.Property("grossAmount",th.ObjectType(
-            th.Property("amount",th.StringType),
-            th.Property("currencyCode",th.StringType),  
-        )),
-        th.Property("netAmount",th.ObjectType(
-            th.Property("amount",th.StringType),
-            th.Property("currencyCode",th.StringType),
-        )),
-        th.Property("amount",th.ObjectType(
-            th.Property("amount",th.StringType),
-            th.Property("currencyCode",th.StringType),
-        )),
-        th.Property("shopId", th.StringType),
-        th.Property("shopMyshopifyDomain",th.StringType),
-        th.Property("shopName",th.StringType),
-        th.Property("shopAvatarUrl",th.StringType),
-        th.Property("referalCategory", th.StringType),
+        #th.Property("grossAmount",th.ObjectType(
+        #    th.Property("amount",th.StringType),
+        #    th.Property("currencyCode",th.StringType),  
+        #)),
+        #th.Property("netAmount",th.ObjectType(
+        #    th.Property("amount",th.StringType),
+        #    th.Property("currencyCode",th.StringType),
+        #)),
+        #th.Property("amount",th.ObjectType(
+        #    th.Property("amount",th.StringType),
+        #    th.Property("currencyCode",th.StringType),
+        #)),
+        #th.Property("shopId", th.StringType), 
+        #th.Property("shopMyshopifyDomain",th.StringType),
+        #th.Property("shopName",th.StringType),
+        #th.Property("shopAvatarUrl",th.StringType),
+        #th.Property("referalCategory", th.StringType),
     ).to_dict()
 
     @property
@@ -78,7 +78,7 @@ class TransactionsStream(ShopifyPartnerStream):
             "LegacyTransaction",
             "ReferralAdjustment",
             "ReferralTransaction",
-            #"TaxTransaction",
+            # "TaxTransaction", # "Field 'shop' doesn't exist on type 'TaxTransaction'"
         ]
         transactions_nodes = " ".join([
             f"""

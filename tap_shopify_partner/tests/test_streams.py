@@ -8,4 +8,4 @@ def test_transaction_stream_query():
     stream = TransactionsStream(tap)
 
     print(stream.base_query)
-    assert stream.base_query
+    assert stream.base_query != ""
