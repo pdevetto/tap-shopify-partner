@@ -10,7 +10,7 @@ from singer_sdk.helpers.jsonpath import extract_jsonpath
 from singer_sdk.streams import GraphQLStream
 import math
 
-API_VERSION = '2025-07'
+API_VERSION = '2026-04'
 
 class ShopifyPartnerStream(GraphQLStream):
     """ShopifyPartner stream class."""
